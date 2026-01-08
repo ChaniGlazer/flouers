@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>זר פרחים AI</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #fdf6f0; }
+    input, button, textarea { padding: 10px; margin: 5px 0; width: 100%; }
+    pre { background: #fff3e0; padding: 15px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>זר פרחים מותאם AI</h1>
+  <form id="flowerForm">
+    <label>תיאור צבעים, סגנון או אווירה:</label>
+    <input type="text" name="description" id="description" placeholder="למשל: צבעים רכים, רומנטי, אביבי">
+    <button type="submit">צור זר</button>
+  </form>
+  <h2>תוצאה:</h2>
+  <pre id="result"></pre>
+
+  <script>
+    const form = document.getElementById('flowerForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.textContent = 'טוען...';
+      const description = document.getElementById('description').value;
+
+      const res = await fetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `description=${encodeURIComponent(description)}`
+      });
+
+      const text = await res.text();
+      result.textContent = text;
+    });
+  </script>
+</body>
+</html>
