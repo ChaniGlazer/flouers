@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { OpenAI } = require('openai');
-//const fetch = require('node-fetch'); // npm install node-fetch
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -13,11 +12,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// פונקציה לקבלת JSON מהמודל GPT-4
+// פונקציה לקבלת JSON מהמודל GPT-4 עם הוראות מפורטות
 async function getFlowerData(description) {
+  console.log('➡️ שולחים בקשה ל-OpenAI עם תיאור:', description);
+
   const systemMessage = `
 אתה מעצב פרחים מקצועי. אתה מחזיר **רק JSON תקין** בלבד.
 אין להוסיף טקסט או הסברים נוספים.
+מבנה JSON חייב לכלול:
+- shopping_list: רשימת פרחים וקישוטים עם כמויות
+- arrangement_instructions: מערך הוראות סידור מפורטות של הזר
+- image_prompt: פרומפט ברור ליצירת תמונה
 `;
 
   const userPrompt = `
@@ -34,10 +39,9 @@ async function getFlowerData(description) {
 **חובה:** כל הפרחים והקישוטים חייבים להיות בצבעים שהמשתמש ביקש. אל תוסיף טקסט אחר.
 `;
 
-  let retries = 3;
-  while (retries > 0) {
+  try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemMessage },
         { role: 'user', content: userPrompt }
@@ -46,17 +50,23 @@ async function getFlowerData(description) {
     });
 
     const text = response.choices[0].message.content;
-    try {
-      return JSON.parse(text);
-    } catch {
-      retries--;
-      if (retries === 0) throw new Error('לא הצלחנו לקבל JSON תקין מהמודל.');
-    }
+
+    console.log('✅ התקבלה תשובה מ-OpenAI');
+    console.log('📝 תוכן התשובה הגולמי:', text);
+
+    // המודל מחזיר JSON – מנסה לפרסר
+    return JSON.parse(text);
+
+  } catch (err) {
+    console.error('❌ שגיאה בתקשורת עם OpenAI:', err);
+    throw err;
   }
 }
 
 // פונקציה ליצירת תמונה מ-Hugging Face Stable Diffusion
 async function generateImageHuggingFace(prompt) {
+  console.log('🎨 יוצרים תמונה עם prompt:', prompt);
+
   const response = await fetch(
     'https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4',
     {
@@ -69,21 +79,35 @@ async function generateImageHuggingFace(prompt) {
     }
   );
 
+  console.log('📡 סטטוס תגובת HuggingFace:', response.status);
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('❌ שגיאה מ-HuggingFace:', text);
+    throw new Error('Hugging Face request failed');
+  }
+
   const buffer = await response.arrayBuffer();
+  console.log('✅ תמונה התקבלה בהצלחה');
+
   const base64 = Buffer.from(buffer).toString('base64');
   return `data:image/png;base64,${base64}`;
 }
 
 // נתיב יצירת זר
 app.post('/generate', async (req, res) => {
+  console.log('📥 בקשה חדשה /generate');
+  console.log('תיאור שהתקבל מהמשתמש:', req.body.description);
+
   const description = req.body.description;
 
   try {
     const jsonOutput = await getFlowerData(description);
+    console.log('📦 JSON שהתקבל מהמודל:', jsonOutput);
 
-    // יצירת תמונה
     let imageUrl = '';
     if (jsonOutput.image_prompt) {
+      console.log('🖼 מתחילים יצירת תמונה');
       imageUrl = await generateImageHuggingFace(jsonOutput.image_prompt);
     }
 
@@ -105,11 +129,11 @@ app.post('/generate', async (req, res) => {
     res.json({ html: htmlOutput, image: imageUrl });
 
   } catch (err) {
-    console.error(err);
+    console.error('🔥 שגיאה בטיפול בבקשה /generate:', err);
     res.json({ html: `<p>אירעה שגיאה: ${err.message}</p>` });
   }
 });
 
 app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+  console.log('🚀 Server running on http://localhost:3000');
 });
