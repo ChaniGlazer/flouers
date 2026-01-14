@@ -68,7 +68,7 @@ async function generateImageHuggingFace(prompt) {
   console.log('🎨 יוצרים תמונה עם prompt:', prompt);
 
   const response = await fetch(
-    'https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4',
+    'https://router.huggingface.co/models/CompVis/stable-diffusion-v1-4',
     {
       method: 'POST',
       headers: {
