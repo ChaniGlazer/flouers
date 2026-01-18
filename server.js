@@ -15,14 +15,28 @@ const openai = new OpenAI({
 async function getFlowerData(description) {
   console.log('➡️ שולחים בקשה ל-OpenAI');
 
-  const systemMessage = `אתה מעצב פרחים. החזר רק JSON תקין. מבנה:
-  {
-    "shopping_list": { "פרחים": {}, "קישוטים": {} },
-    "arrangement_instructions": [],
-    "image_prompt": "English description for image generation"
-  }`;
+ const systemMessage = `
+אתה מעצב פרחים מומחה. עליך להחזיר JSON בלבד.
 
-  const userPrompt = `קלט: "${description}". חובה: image_prompt באנגלית בלבד.`;
+הנחיות מחמירות:
+1. שמות פרחים: אל תכתוב רק צבע. בחר שמות של פרחים אמיתיים (למשל: ורדים, ליליות, דליות, ציפורנים).
+2. התאמה לתמונה: ה-image_prompt חייב להכיל אך ורק את סוגי הפרחים שהופעת ב-shopping_list.
+3. פירוט הוראות: חלק את ההוראות ל-4 שלבים:
+   א. הכנת הפרחים (חיתוך, הסרת עלים).
+   ב. בניית המבנה (בסיס ירוק).
+   ג. שזירת הפרחים המרכזיים.
+   ד. סגירה וקשירה.
+4. שפת התמונה: ה-image_prompt חייב להיות באנגלית טכנית (למשל: "A single purple Dahlia surrounded by silver dollar eucalyptus, tied with twine, studio background").
+`;
+
+  const userPrompt = `
+צור תוכנית לזר פרחים לפי התיאור: "${description}".
+
+דרישות חובה ב-JSON:
+- וודא שכל פרח שמופיע ב-image_prompt מופיע גם ב-shopping_list עם כמות מדויקת.
+- אל תוסיף פרחים נוספים בתמונה שלא ביקשתי.
+- ב-arrangement_instructions, תאר פעולות פיזיות (כמו "חתוך את הגבעולים ב-45 מעלות").
+`;
 
   try {
     const response = await openai.chat.completions.create({
