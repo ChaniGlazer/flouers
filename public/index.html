@@ -3,22 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>זר פרחים AI</title>
+  <title>זר פרחים AI - עיצוב יוקרתי</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #fdf6f0; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    img { margin-top: 20px; max-width: 100%; border-radius: 10px; }
+    /* רקע כללי עם גרדיאנט עדין */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fceaf7 0%, #e8f5ff 100%);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #444;
+    }
+
+    /* כרטיס האפליקציה המרכזי */
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 25px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      border: 2px solid #fff;
+    }
+
+    h1 {
+      color: #d81b60;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    /* עיצוב שדה הקלט */
+    input[type="text"] {
+      padding: 15px;
+      border: 2px solid #eee;
+      border-radius: 15px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+      margin-bottom: 15px;
+    }
+
+    input[type="text"]:focus {
+      border-color: #d81b60;
+      box-shadow: 0 0 10px rgba(216, 27, 96, 0.2);
+    }
+
+    /* כפתור מעוצב עם אנימציה */
+    button {
+      padding: 15px;
+      background: linear-gradient(90deg, #ff4081, #d81b60);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 5px 15px rgba(216, 27, 96, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(216, 27, 96, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* אזור התוצאה */
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #d81b60;
+      min-height: 24px;
+    }
+
+    /* עיצוב התמונה */
+    img {
+      margin-top: 20px;
+      max-width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      display: none; /* מוסתר עד שיש תמונה */
+    }
+
+    /* אנימציית טעינה פשוטה */
+    .loading-pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
-  <h1>זר פרחים מותאם AI</h1>
-  <form id="flowerForm">
-    <label>תיאור צבעים, סגנון או אווירה:</label>
-    <input type="text" name="description" id="description" placeholder="למשל: תכולים, רומנטי, אביבי">
-    <button type="submit">צור זר</button>
-  </form>
-  <div id="result"></div>
-  <img id="flowerImage" src="" alt="תמונה של הזר">
+
+  <div class="container">
+    <h1>💐 זר פרחים AI</h1>
+    <p>תאר לנו את הזר המושלם עבורך</p>
+
+    <form id="flowerForm">
+      <input type="text" name="description" id="description" placeholder="למשל: צבעי פסטל, סגנון כפרי, שושנים...">
+      <button type="submit">צרו לי זר קסום</button>
+    </form>
+
+    <div id="result"></div>
+    <img id="flowerImage" src="" alt="הזר המעוצב שלך">
+  </div>
 
   <script>
     const form = document.getElementById('flowerForm');
@@ -27,21 +134,33 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      result.innerHTML = 'טוען...';
+      
+      // עיצוב מצב טעינה
+      result.innerHTML = '<span class="loading-pulse">שוזרים עבורך את הפרחים...</span>';
+      flowerImage.style.display = 'none';
       flowerImage.src = '';
 
       const description = document.getElementById('description').value;
 
-      const res = await fetch('/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `description=${encodeURIComponent(description)}`
-      });
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `description=${encodeURIComponent(description)}`
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      result.innerHTML = data.html || 'אירעה שגיאה';
-      if (data.image) flowerImage.src = data.image;
+        result.innerHTML = data.html || 'משהו השתבש, נסו שוב';
+        
+        if (data.image) {
+          flowerImage.src = data.image;
+          flowerImage.style.display = 'block';
+          result.innerHTML = 'הנה הזר שלך!';
+        }
+      } catch (error) {
+        result.innerHTML = 'שגיאה בחיבור לשרת';
+      }
     });
   </script>
 </body>
