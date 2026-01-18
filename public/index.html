@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>זר פרחים AI - חוויה קסומה</title>
+  <title>זר פרחים AI - חוויה מלאה</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
@@ -18,13 +18,29 @@
       font-family: 'Assistant', 'Segoe UI', sans-serif;
       background: var(--bg-gradient);
       margin: 0;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       color: #2f3542;
       overflow: hidden;
       position: relative;
+    }
+
+    /* אפקט פרחים נופלים ברקע */
+    .flower-particle {
+      position: absolute;
+      top: -50px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      animation: fallAnimation linear forwards;
+    }
+
+    @keyframes fallAnimation {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
 
     /* מיכל ראשי */
@@ -35,10 +51,9 @@
       border-radius: 35px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.1);
       width: 90%;
-      max-width: 480px;
+      max-width: 450px;
       text-align: center;
       z-index: 10;
-      position: relative;
       border: 1px solid rgba(255,255,255,0.5);
       animation: slideUp 0.8s ease-out;
     }
@@ -63,12 +78,9 @@
       transition: 0.3s;
     }
     
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--secondary-color);
-    }
+    input[type="text"]:focus { outline: none; border-color: var(--secondary-color); }
 
-    button {
+    .main-btn {
       padding: 18px;
       background: linear-gradient(135deg, #ff4757, #ff6b81);
       color: white;
@@ -78,120 +90,127 @@
       font-weight: bold;
       cursor: pointer;
       width: 100%;
-      transition: 0.3s;
       box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3);
+      transition: 0.3s;
     }
 
-    button:hover { transform: translateY(-3px); }
+    .main-btn:hover { transform: translateY(-3px); }
 
-    /* כרטיס ההוראות */
-    .instructions-card {
+    /* שכבת התוצאות */
+    .result-overlay {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      width: 90%;
-      max-width: 550px;
-      max-height: 85vh;
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      border-radius: 30px;
-      padding: 30px;
-      box-shadow: 0 30px 100px rgba(0,0,0,0.2);
-      z-index: 100;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.05);
       display: none;
-      overflow-y: auto;
-      border: 2px solid white;
-      opacity: 0;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(5px);
     }
 
-    .instructions-card.active {
-      display: block;
-      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    .result-grid {
+      display: flex;
+      flex-direction: row; /* ב-RTL: אלמנט ראשון בימין, שני בשמאל */
+      gap: 25px;
+      width: 95%;
+      max-width: 1150px;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     @keyframes popIn {
-      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    .close-btn {
-      position: sticky;
-      top: 0;
-      float: left;
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(25px);
+      border-radius: 40px;
+      padding: 30px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+      flex: 1;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255,255,255,0.6);
+      position: relative;
+    }
+
+    /* כרטיס ימין: הוראות */
+    .info-card { text-align: right; }
+
+    /* כרטיס שמאל: תמונה */
+    .image-card { overflow: hidden; padding: 15px; }
+    #flowerImage { width: 100%; height: 100%; object-fit: cover; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+    .scroll-content {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin: 20px 0;
+      padding-left: 10px;
+      line-height: 1.7;
+    }
+
+    .close-x {
+      position: absolute;
+      top: 20px;
+      left: 20px;
       background: #eee;
-      border-radius: 50%;
       width: 35px;
       height: 35px;
+      border-radius: 50%;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       cursor: pointer;
       font-weight: bold;
-      z-index: 101;
+      color: #555;
     }
 
-    #flowerImage {
-      width: 100%;
-      border-radius: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    /* כפתורי פעולה */
-    .action-buttons {
-      display: flex;
-      gap: 15px;
-      margin-top: 25px;
-    }
-
-    .btn-like {
-      background: linear-gradient(135deg, #2ed573, #7bed9f);
-      box-shadow: 0 8px 20px rgba(46, 213, 115, 0.3);
-      flex: 2;
-    }
-
-    .btn-dislike {
-      background: #f1f2f6;
-      color: #57606f;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      flex: 1;
-    }
-
-    .btn-dislike:hover { background: #dfe4ea; }
-
-    /* פרחים נופלים */
-    .flower-particle { position: absolute; top: -50px; user-select: none; pointer-events: none; z-index: 1; }
-    @keyframes fallAnimation {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-      10% { opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
+    .action-buttons { display: flex; gap: 12px; margin-top: 10px; }
+    .btn-success { background: #2ed573; flex: 2; padding: 15px; border-radius: 15px; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .btn-secondary { background: #f1f2f6; flex: 1; padding: 15px; border-radius: 15px; color: #57606f; border: none; cursor: pointer; }
 
     .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 8px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 900px) {
+      .result-grid { flex-direction: column; height: 90vh; overflow-y: auto; }
+      .card { height: auto; min-height: 400px; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="container" id="inputView">
     <h1>💐 זר פרחים AI</h1>
-    <p class="subtitle">הקישו תיאור וקבלו זר מהחלומות</p>
-
+    <p class="subtitle">הקישו תיאור וקבלו עיצוב מהחלומות</p>
     <form id="flowerForm">
       <input type="text" id="description" placeholder="למשל: זר סגול עם עלי אקליפטוס..." required>
-      <button type="submit" id="submitBtn">צרו זר עכשיו</button>
+      <button type="submit" class="main-btn" id="submitBtn">צרו זר עכשיו</button>
     </form>
   </div>
 
-  <div id="instructionCard" class="instructions-card">
-    <div class="close-btn" onclick="closeCard()">✕</div>
-    <h2 style="color: var(--primary-color); margin-top: 0;">הזר המושלם עבורך ✨</h2>
-    <img id="flowerImage" src="" alt="זר פרחים">
-    <div id="instructionsContent" style="line-height: 1.6; text-align: right;"></div>
-    
-    <div class="action-buttons">
-      <button id="likeBtn" class="btn-like" onclick="sendToFlorist()">אהבתי! שלחו לשוזרת 💖</button>
-      <button class="btn-dislike" onclick="closeCard()">לא אהבתי</button>
+  <div class="result-overlay" id="resultView">
+    <div class="result-grid">
+      
+      <div class="card info-card">
+        <div class="close-x" onclick="closeApp()">✕</div>
+        <h2 style="color: var(--primary-color); margin: 0; text-align: center;">הוראות והרכב הזר ✨</h2>
+        <div id="instructionsContent" class="scroll-content"></div>
+        <div class="action-buttons">
+          <button class="btn-success" onclick="sendToFlorist()">שלחו לשוזרת 💖</button>
+          <button class="btn-secondary" onclick="closeApp()">ביטול</button>
+        </div>
+      </div>
+
+      <div class="card image-card">
+        <img id="flowerImage" src="" alt="זר פרחים">
+      </div>
+
     </div>
   </div>
 
@@ -203,95 +222,58 @@
       flower.className = 'flower-particle';
       flower.innerText = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
       flower.style.left = Math.random() * 100 + 'vw';
+      flower.style.fontSize = (Math.random() * 20 + 15) + 'px';
       const duration = Math.random() * 5 + 5;
-      flower.style.animation = `fallAnimation ${duration}s linear forwards`;
+      flower.style.animationDuration = duration + 's';
       document.body.appendChild(flower);
       setTimeout(() => flower.remove(), duration * 1000);
     }
-    setInterval(createFlower, 500);
+    setInterval(createFlower, 700);
 
     const form = document.getElementById('flowerForm');
-    const card = document.getElementById('instructionCard');
-    const content = document.getElementById('instructionsContent');
-    const img = document.getElementById('flowerImage');
-    const submitBtn = document.getElementById('submitBtn');
-    const likeBtn = document.getElementById('likeBtn');
+    const inputView = document.getElementById('inputView');
+    const resultView = document.getElementById('resultView');
 
-    function closeCard() {
-      card.classList.remove('active');
+    function closeApp() {
+      resultView.style.display = 'none';
+      inputView.style.display = 'block';
       form.reset();
-    }
-
-    // פונקציית הקונפטי המגניבה
-    function launchConfetti() {
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#ff4757', '#ff6b81', '#2ed573', '#ffffff']
-      });
-    }
-
-    async function sendToFlorist() {
-      // הפעלת קונפטי מיד בלחיצה
-      launchConfetti();
-      
-      const originalText = likeBtn.innerText;
-      likeBtn.disabled = true;
-      likeBtn.innerHTML = '<div class="loader"></div> שולח...';
-
-      try {
-        const res = await fetch('/send-to-florist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            html: content.innerHTML,
-            image: img.src
-          })
-        });
-
-        if (res.ok) {
-          setTimeout(() => {
-            alert('ההזמנה נשלחה לשוזרת בהצלחה! השוזרת תתחיל לעבוד על הזר שלך בקרוב.');
-            closeCard();
-          }, 500);
-        } else {
-          alert('הייתה בעיה בשליחה, נסו שוב מאוחר יותר.');
-        }
-      } catch (err) {
-        alert('שגיאת תקשורת בשליחה.');
-      } finally {
-        likeBtn.disabled = false;
-        likeBtn.innerText = originalText;
-      }
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<div class="loader"></div> שוזרים...';
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader"></div> שוזרים...';
       
-      const description = document.getElementById('description').value;
+      const desc = document.getElementById('description').value;
 
       try {
         const res = await fetch('/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `description=${encodeURIComponent(description)}`
+          body: `description=${encodeURIComponent(desc)}`
         });
 
         const data = await res.json();
-        content.innerHTML = data.html || 'לא התקבלו הוראות.';
-        img.src = data.image || '';
-        img.style.display = data.image ? 'block' : 'none';
-        card.classList.add('active');
+        document.getElementById('instructionsContent').innerHTML = data.html || 'לא התקבלו הוראות.';
+        document.getElementById('flowerImage').src = data.image || '';
+
+        inputView.style.display = 'none';
+        resultView.style.display = 'flex';
       } catch (err) {
         alert('שגיאה בחיבור לשרת.');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'צרו זר עכשיו';
+        btn.disabled = false;
+        btn.innerText = 'צרו זר עכשיו';
       }
     });
+
+    function sendToFlorist() {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+      alert('ההזמנה נשלחה בהצלחה!');
+      closeApp();
+    }
   </script>
 </body>
 </html>
