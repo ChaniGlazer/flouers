@@ -3,44 +3,26 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { OpenAI } = require('openai');
 
-// Node 18+ כולל fetch. אם לא – יש להתקין node-fetch
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// אינטגרציה עם OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// פונקציה לקבלת JSON מהמודל עם הוראות מפורטות
+// פונקציה לקבלת נתונים מ-OpenAI
 async function getFlowerData(description) {
-  console.log('➡️ שולחים בקשה ל-OpenAI עם תיאור:', description);
+  console.log('➡️ שולחים בקשה ל-OpenAI');
 
-  const systemMessage = `
-אתה מעצב פרחים מקצועי. אתה מחזיר **רק JSON תקין** בלבד.
-אין להוסיף טקסט או הסברים נוספים.
-מבנה JSON חייב לכלול:
-- shopping_list: רשימת פרחים וקישוטים עם כמויות
-- arrangement_instructions: מערך הוראות סידור מפורטות של הזר
-- image_prompt: פרומפט ברור ליצירת תמונה
-`;
+  const systemMessage = `אתה מעצב פרחים. החזר רק JSON תקין. מבנה:
+  {
+    "shopping_list": { "פרחים": {}, "קישוטים": {} },
+    "arrangement_instructions": [],
+    "image_prompt": "English description for image generation"
+  }`;
 
-  const userPrompt = `
-קלט מהמשתמש: "${description}"
-החזר JSON במבנה:
-{
-  "shopping_list": {
-    "פרחים": { "שם פרח": כמות },
-    "קישוטים": { "שם קישוט": כמות }
-  },
-  "arrangement_instructions": ["הוראה 1", "הוראה 2"],
-  "image_prompt": "פרומפט ברור ומדויק ליצירת תמונה של הזר"
-}
-**חובה:** כל הפרחים והקישוטים חייבים להיות בצבעים שהמשתמש ביקש.
-`;
+  const userPrompt = `קלט: "${description}". חובה: image_prompt באנגלית בלבד.`;
 
   try {
     const response = await openai.chat.completions.create({
@@ -52,78 +34,71 @@ async function getFlowerData(description) {
       temperature: 0.7
     });
 
-    const text = response.choices[0].message.content;
-    console.log('✅ התקבלה תשובה מ-OpenAI');
-    console.log('📝 תוכן התשובה הגולמי:', text);
-
+    let text = response.choices[0].message.content;
+    // ניקוי תגיות Markdown אם קיימות
+    text = text.replace(/```json|```/g, '').trim();
     return JSON.parse(text);
-
   } catch (err) {
-    console.error('❌ שגיאה בתקשורת עם OpenAI:', err);
+    console.error('❌ שגיאה ב-OpenAI:', err);
     throw err;
   }
 }
 
-// פונקציה ליצירת תמונה מ-HuggingFace (URL מעודכן)
+// פונקציה ליצירת תמונה - מתוקנת
 async function generateImageHuggingFace(prompt) {
-  console.log('🎨 יוצרים תמונה עם prompt:', prompt);
+  console.log('🎨 יוצרים תמונה ב-HuggingFace...');
+  
+  const modelUrl = 'https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5';
 
-  const response = await fetch(
-    'https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2',
-    {
+  try {
+    const response = await fetch(modelUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.HF_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ inputs: prompt })
+      body: JSON.stringify({ 
+        inputs: prompt,
+        options: { wait_for_model: true } 
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ שגיאה מהשרת:', errorText);
+      throw new Error(`HuggingFace error: ${response.status}`);
     }
-  );
 
-  console.log('📡 סטטוס תגובת HuggingFace:', response.status);
+    const buffer = await response.arrayBuffer();
+    console.log('✅ תמונה נוצרה בהצלחה');
+    return `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`;
 
-  if (!response.ok) {
-    const text = await response.text();
-    console.error('❌ שגיאה מ-HuggingFace:', text);
-    throw new Error('Hugging Face request failed');
+  } catch (err) {
+    console.error('⚠️ כשל ביצירת תמונה:', err.message);
+    throw err;
   }
-
-  const buffer = await response.arrayBuffer();
-  console.log('✅ תמונה התקבלה בהצלחה');
-
-  const base64 = Buffer.from(buffer).toString('base64');
-  return `data:image/png;base64,${base64}`;
 }
 
-// נתיב יצירת זר
+// נתיב ה-API הראשי
 app.post('/generate', async (req, res) => {
-  console.log('📥 בקשה חדשה /generate');
-  console.log('תיאור שהתקבל מהמשתמש:', req.body.description);
+  console.log('📥 בקשה חדשה התקבלה');
 
   try {
     const jsonOutput = await getFlowerData(req.body.description);
-    console.log('📦 JSON שהתקבל מהמודל:', jsonOutput);
-
-    // ניסיון יצירת תמונה – לא מפיל את הבקשה
+    
     let imageUrl = '';
     if (jsonOutput.image_prompt) {
-      console.log('🖼 מתחילים יצירת תמונה');
       try {
         imageUrl = await generateImageHuggingFace(jsonOutput.image_prompt);
       } catch (err) {
-        console.error('⚠️ יצירת תמונה נכשלה, ממשיכים בלי תמונה');
-        imageUrl = '';
+        imageUrl = ''; // ממשיכים בלי תמונה אם נכשל
       }
     }
 
-    // בניית HTML קריא
+    // בניית HTML
     let htmlOutput = '<h3>רשימת פרחים:</h3><ul>';
     for (const [flower, qty] of Object.entries(jsonOutput.shopping_list?.פרחים || {})) {
       htmlOutput += `<li>${flower}: ${qty}</li>`;
-    }
-    htmlOutput += '</ul><h3>קישוטים:</h3><ul>';
-    for (const [decoration, qty] of Object.entries(jsonOutput.shopping_list?.קישוטים || {})) {
-      htmlOutput += `<li>${decoration}: ${qty}</li>`;
     }
     htmlOutput += '</ul><h3>הוראות סידור:</h3><ol>';
     for (const step of jsonOutput.arrangement_instructions || []) {
@@ -131,20 +106,13 @@ app.post('/generate', async (req, res) => {
     }
     htmlOutput += '</ol>';
 
-    res.json({
-      html: htmlOutput,
-      image: imageUrl
-    });
+    res.json({ html: htmlOutput, image: imageUrl });
 
   } catch (err) {
-    console.error('🔥 שגיאה בטיפול בבקשה /generate:', err);
-    res.json({
-      html: `<p>אירעה שגיאה: ${err.message}</p>`,
-      image: ''
-    });
+    res.status(500).json({ html: `<p>שגיאה: ${err.message}</p>`, image: '' });
   }
 });
 
 app.listen(3000, () => {
-  console.log('🚀 Server running on http://localhost:3000');
+  console.log('🚀 Server is running on http://localhost:3000');
 });

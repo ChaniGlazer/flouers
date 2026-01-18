@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>זר פרחים AI - חוויה קסומה</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
       --primary-color: #ff4757;
@@ -136,7 +137,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
-    /* כפתורי פעולה בתחתית הכרטיס */
+    /* כפתורי פעולה */
     .action-buttons {
       display: flex;
       gap: 15px;
@@ -195,7 +196,7 @@
   </div>
 
   <script>
-    // יצירת פרחים נופלים ברקע
+    // יצירת פרחים נופלים
     const flowerEmojis = ['🌸', '🌼', '🌷', '🌹', '🌻', '🌺'];
     function createFlower() {
       const flower = document.createElement('div');
@@ -216,14 +217,25 @@
     const submitBtn = document.getElementById('submitBtn');
     const likeBtn = document.getElementById('likeBtn');
 
-    // פונקציה לסגירת הכרטיס וחזרה למסך הראשי
     function closeCard() {
       card.classList.remove('active');
       form.reset();
     }
 
-    // פונקציה לשליחה לשוזרת
+    // פונקציית הקונפטי המגניבה
+    function launchConfetti() {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#ff4757', '#ff6b81', '#2ed573', '#ffffff']
+      });
+    }
+
     async function sendToFlorist() {
+      // הפעלת קונפטי מיד בלחיצה
+      launchConfetti();
+      
       const originalText = likeBtn.innerText;
       likeBtn.disabled = true;
       likeBtn.innerHTML = '<div class="loader"></div> שולח...';
@@ -239,13 +251,14 @@
         });
 
         if (res.ok) {
-          alert('ההזמנה נשלחה לשוזרת בהצלחה!');
-          closeCard();
+          setTimeout(() => {
+            alert('ההזמנה נשלחה לשוזרת בהצלחה! השוזרת תתחיל לעבוד על הזר שלך בקרוב.');
+            closeCard();
+          }, 500);
         } else {
           alert('הייתה בעיה בשליחה, נסו שוב מאוחר יותר.');
         }
       } catch (err) {
-        console.error(err);
         alert('שגיאת תקשורת בשליחה.');
       } finally {
         likeBtn.disabled = false;
@@ -253,7 +266,6 @@
       }
     }
 
-    // הגשת הטופס הראשי
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
@@ -269,15 +281,12 @@
         });
 
         const data = await res.json();
-
         content.innerHTML = data.html || 'לא התקבלו הוראות.';
         img.src = data.image || '';
         img.style.display = data.image ? 'block' : 'none';
-        
         card.classList.add('active');
-
       } catch (err) {
-        alert('שגיאה בחיבור לשרת ה-AI.');
+        alert('שגיאה בחיבור לשרת.');
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = 'צרו זר עכשיו';
