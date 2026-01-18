@@ -16,21 +16,37 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     timeout: 60000 // הגדלת זמן המתנה ל-60 שניות עבור חיבורים איטיים
 });
-
 async function getFlowerData(description) {
     console.log('➡️ שולחים בקשה ל-OpenAI');
 
-    const systemMessage = `
-אתה מעצב פרחים מומחה. עליך להחזיר JSON בלבד. מבנה:
+    const systemMessage = `אתה מומחה מקצועי לעיצוב זרי פרחים ולפלוריסטיקה.
+עליך להחזיר JSON תקני בלבד — ללא טקסט חופשי, ללא הסברים.
+
+מבנה החובה:
 {
-  "shopping_list": { "פרחים": {}, "קישוטים": {} },
+  "shopping_list": {
+    "פרחים": {},
+    "קישוטים": {}
+  },
   "arrangement_instructions": [],
   "image_prompt": ""
 }
-הנחיות:
-1. בחר שמות פרחים אמיתיים (ורדים, דליות וכו').
-2. image_prompt באנגלית טכנית בלבד, תיאור ריאליסטי.
-3. הוראות סידור: 4 שלבים טכניים ומפורטים.`;
+
+כללים מחייבים:
+1. שמות פרחים אמיתיים ומוכרים בלבד.
+2. בדיוק 4 שלבים ב-arrangement_instructions.
+3. שפה:
+   - shopping_list: עברית בלבד
+   - arrangement_instructions: עברית בלבד
+   - image_prompt: אנגלית בלבד
+4. image_prompt:
+   - תיאור ריאליסטי
+   - מותאם ל-SDXL
+   - ללא אנשים, ידיים, טקסט או לוגו
+5. אין להוסיף שדות נוספים.
+6. אין להוסיף טקסט מחוץ ל-JSON.
+
+`;
 
     try {
         const response = await openai.chat.completions.create({
