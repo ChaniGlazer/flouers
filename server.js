@@ -47,8 +47,9 @@ async function getFlowerData(description) {
 // פונקציה ליצירת תמונה - מתוקנת
 async function generateImageHuggingFace(prompt) {
   console.log('🎨 יוצרים תמונה ב-HuggingFace...');
-  
-  const modelUrl = 'https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5';
+
+  // שימוש בכתובת הישירה והמעודכנת של המודל
+  const modelUrl = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0";
 
   try {
     const response = await fetch(modelUrl, {
@@ -66,6 +67,7 @@ async function generateImageHuggingFace(prompt) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ שגיאה מהשרת:', errorText);
+      // אם זה מחזיר 404, זה אומר שה-URL לא תקין או שהמודל לא זמין זמנית
       throw new Error(`HuggingFace error: ${response.status}`);
     }
 
