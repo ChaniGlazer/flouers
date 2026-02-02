@@ -146,7 +146,17 @@ app.post('/generate', async (req, res) => {
         res.status(500).json({ html: `<p>שגיאה בעיבוד הבקשה: ${err.message}</p>`, image: '' });
     }
 });
+// פינג עצמי כל 10 דקות
+const SERVER_URL = 'https://your-app-name.onrender.com'; // שנה לכתובת האמיתית שלך
 
+setInterval(async () => {
+    try {
+        const response = await fetch(SERVER_URL);
+        console.log(`Self-ping successful: Status ${response.status} at ${new Date().toISOString()}`);
+    } catch (error) {
+        console.error(`Self-ping failed: ${error.message}`);
+    }
+}, 10 * 60 * 1000); // 10 דקות במילישניות
 app.listen(3000, () => {
     console.log('🚀 Server is running on http://localhost:3000');
 });
