@@ -146,6 +146,10 @@ app.post('/generate', async (req, res) => {
         res.status(500).json({ html: `<p>שגיאה בעיבוד הבקשה: ${err.message}</p>`, image: '' });
     }
 });
+app.get('/ping', (req, res) => {
+    res.status(200).send('ok');
+});
+
 // פינג עצמי כל 10 דקות
 app.listen(3000, () => {
     console.log('🚀 Server is running on http://localhost:3000');
