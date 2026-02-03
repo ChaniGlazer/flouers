@@ -30,30 +30,40 @@ async function saveImage(buffer, fileName) {
     return `/images/${fileName}`;
 }
 
-async function uploadToCloudinary(buffer, fileName) {
-    // יוצרים תיקייה זמנית אם לא קיימת
+async function uploadToCloudinary(buffer, originalFileName) {
     const tempDir = path.join(__dirname, "temp");
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-    const tempPath = path.join(tempDir, fileName);
+    // יוצרים שם זמני ייחודי
+    const timestamp = Date.now();
+    const ext = path.extname(originalFileName);
+    const tempFileName = `temp_${timestamp}${ext}`;
+    const tempPath = path.join(tempDir, tempFileName);
+
+    // שומרים את הקובץ הזמני
     await fs.promises.writeFile(tempPath, buffer);
-    console.log(`[LOG] Saved temp image: ${tempPath}`);
+    console.log(`[LOG] Saved temp image: ${tempPath} (size: ${buffer.length} bytes)`);
 
     try {
         const result = await cloudinary.uploader.upload(tempPath, {
             folder: "bouquets",
-            public_id: fileName.replace(/\.[^/.]+$/, ""),
             resource_type: "image",
-            format: path.extname(fileName).replace(".", ""), // שומר את הפורמט המקורי
-            overwrite: true
+            unique_filename: true, // כל תמונה תקבל public_id ייחודי
+            overwrite: false,
+            invalidate: true,      // מבטל cache ל-CDN אם קיים
+            format: ext.replace(".", "") // שומר את הפורמט המקורי
         });
+
         console.log("[LOG] Uploaded to Cloudinary:", result.secure_url);
-        return result.secure_url;
+
+        // מחזיר URL עם פרמטר גרסה כדי להבטיח שהדפדפן לא ישמור cache ישן
+        return `${result.secure_url}?v=${timestamp}`;
     } finally {
-        // מוחקים את הקובץ הזמני
         fs.unlinkSync(tempPath);
+        console.log(`[LOG] Deleted temp file: ${tempPath}`);
     }
 }
+
 
 async function getFlowerData(description) {
     const systemMessage = `
