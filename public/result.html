@@ -3,227 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <title>הזר שלך 🌸</title>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
-      --primary: #ff4757;
-      --secondary: #ff6b81;
-      --glass: rgba(255, 255, 255, 0.9);
+      --primary-color: #ff4757;
+      --secondary-color: #ff6b81;
+      --bg-gradient: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+      --glass-bg: rgba(255, 255, 255, 0.85);
     }
 
     body {
       font-family: 'Assistant', sans-serif;
-      background: radial-gradient(circle at top right, #fff5f5, #fdfcfb, #e2d1c3);
+      background: var(--bg-gradient);
       margin: 0;
-      padding: 20px;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      overflow-x: hidden; /* למנוע גלילה אופקית מפרחים */
-      position: relative; /* למיקום נכון של הפרחים */
+      padding: 40px 20px;
+      overflow-x: hidden;
     }
 
-    /* פרחים נופלים ברקע */
-    .flower-particle {
-      position: absolute;
-      top: -20px; /* מתחילים מעל המסך */
-      user-select: none;
-      pointer-events: none;
-      font-size: 20px;
-      opacity: 0; /* מתחילים שקופים */
-      animation: fallAnimation linear forwards;
-      z-index: 0; /* מתחת לתוכן */
-    }
-
-    @keyframes fallAnimation {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.8; } /* מופיעים */
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } /* נופלים ונעלמים */
+    h1 {
+      color: var(--primary-color);
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      animation: fadeIn 0.8s ease-out;
     }
 
     .container {
       max-width: 1100px;
       width: 100%;
       display: flex;
-      gap: 30px;
+      gap: 25px;
       flex-wrap: wrap;
-      animation: fadeIn 0.8s ease-out;
-      z-index: 1; /* מעל הפרחים */
+      justify-content: center;
+      animation: slideUp 0.8s ease-out;
     }
 
-    @keyframes fadeIn {
+    @keyframes slideUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .card {
-      background: var(--glass);
+      background: var(--glass-bg);
       backdrop-filter: blur(15px);
-      border-radius: 40px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      flex: 1;
-      min-width: 350px;
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.08);
       border: 1px solid rgba(255,255,255,0.6);
+      flex: 1;
+      min-width: 320px;
       display: flex;
       flex-direction: column;
+      transition: 0.3s;
     }
 
     h2 {
-      color: var(--primary);
-      font-size: 2.5rem;
-      font-weight: 800;
+      color: #57606f;
+      font-size: 1.6rem;
       margin-top: 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding-bottom: 10px;
     }
 
     #instructions {
-      font-size: 1.2rem;
       line-height: 1.8;
       color: #2f3542;
+      font-size: 1.1rem;
       margin: 20px 0;
-      flex-grow: 1;
-      overflow-y: auto; /* אם התוכן ארוך */
-      max-height: 400px; /* גובה מקסימלי לטקסט */
     }
 
     .image-wrapper {
       position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 30px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      background: #eee;
+      line-height: 0;
     }
 
     img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
+      height: auto;
+      border-radius: 20px;
+      transition: 0.5s;
     }
 
     .btn-group {
       display: flex;
-      gap: 15px;
-      margin-top: 25px;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
     }
 
     button {
-      padding: 18px 25px;
+      padding: 15px 20px;
       border: none;
-      border-radius: 22px;
-      font-size: 1.1rem;
-      font-weight: 800;
+      border-radius: 18px;
+      font-weight: bold;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: 0.3s;
+      font-family: inherit;
     }
 
     .btn-send {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
       color: white;
       flex: 2;
+      box-shadow: 0 8px 20px rgba(255, 71, 87, 0.2);
     }
 
-    .btn-back {
-      background: #f1f2f6;
-      color: #57606f;
-      flex: 1;
-    }
+    .btn-back { background: #f1f2f6; color: #57606f; flex: 1; }
 
-    .btn-download {
+    .download-link {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 15px;
+      left: 15px;
       background: white;
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.4rem;
+      text-decoration: none;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      z-index: 10;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--primary-color);
     }
 
-    button:hover { transform: translateY(-5px); filter: brightness(1.1); }
+    .flower-particle {
+      position: absolute;
+      top: -30px;
+      pointer-events: none;
+      animation: fall linear forwards;
+      z-index: -1;
+    }
 
-    @media (max-width: 900px) {
-      .container { flex-direction: column; }
-      .card:nth-child(2) { order: -1; height: 400px; } /* התמונה למעלה בנייד */
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    @media (max-width: 800px) {
+      .container { flex-direction: column-reverse; }
+      h1 { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="card">
-    <h2>הזר שלך מוכן ✨</h2>
-    <div id="instructions"></div>
-    <div class="btn-group">
-      <button class="btn-send" onclick="sendToFlorist()">שלחו לשוזרת 💖</button>
-      <button class="btn-back" onclick="goBack()">חזרה</button>
-    </div>
-  </div>
+  <h1>הזר המיוחד שלך ✨</h1>
 
-  <div class="card" style="padding: 10px;">
-    <div class="image-wrapper">
-      <img id="image" alt="זר פרחים">
-      <button class="btn-download" onclick="downloadImg()" title="שמור תמונה">💾</button>
+  <div class="container">
+    <div class="card">
+      <h2>הוראות והרכב הזר</h2>
+      <div id="instructions"></div>
+      <div class="btn-group">
+        <button class="btn-send" onclick="sendToFlorist()">שלחו לשוזרת 💖</button>
+        <button class="btn-back" onclick="goBack()">חזרה</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="image-wrapper">
+        <img id="image" alt="זר פרחים">
+        <a id="downloadBtn" class="download-link" title="הורדת תמונה">💾</a>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
-  /* הלוגיקה המקורית שלך - נשארה ב-100% ללא שינוי */
+  /* לוגיקה מקורית - ללא שינוי */
   const raw = sessionStorage.getItem('flowerResult');
 
   if (!raw) {
-    document.body.innerHTML = '<h2 style="text-align:center; margin-top:50px;">לא נמצאו נתונים. חזרי לעמוד הראשי.</h2>';
+    document.body.innerHTML = '<h2 style="text-align:center; padding-top:100px;">לא נמצאו נתונים. חזרי לעמוד הראשי.</h2>';
   } else {
     const data = JSON.parse(raw);
     document.getElementById('instructions').innerHTML = data.html;
-    document.getElementById('image').src = data.image || '';
+    const img = document.getElementById('image');
+    img.src = data.image || '';
+    
+    // הגדרת כפתור ההורדה
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.onclick = () => downloadImage(data.image);
   }
 
   function goBack() {
     window.location.href = '/';
   }
 
-  /* פונקציות עזר לעיצוב */
+  /* פונקציות חגיגה והורדה */
   function sendToFlorist() {
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    alert('ההזמנה נשלחה!');
+    alert('ההזמנה נשלחה בהצלחה!');
   }
 
-  function downloadImg() {
-    const link = document.createElement('a');
-    link.href = document.getElementById('image').src;
-    link.download = 'my-bouquet.png';
-    link.click();
+  async function downloadImage(imageSrc) {
+    if(!imageSrc) return;
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my-bouquet.png';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      // אם יש שגיאת אבטחה (CORS), פשוט נפתח את התמונה בטאב חדש
+      window.open(imageSrc, '_blank');
+    }
   }
 
-  /* לוגיקת הפרחים הנופלים */
-  const flowerEmojis = ['🌸', '🌷', '🌼', '🌺', '🌹'];
-  function createFallingFlower() {
-    const flower = document.createElement('div');
-    flower.className = 'flower-particle';
-    flower.innerText = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
-    flower.style.left = Math.random() * 100 + 'vw';
-    flower.style.animationDuration = Math.random() * 5 + 5 + 's'; // 5-10 שניות
-    flower.style.fontSize = Math.random() * 15 + 10 + 'px'; // 10-25 פיקסלים
-    document.body.appendChild(flower);
-    
-    // הסרת הפרח לאחר סיום האנימציה
-    flower.addEventListener('animationend', () => {
-      flower.remove();
-    });
+  /* אפקט פרחים עדין */
+  const flowers = ['🌸', '🌷', '🌼', '🌺'];
+  function createFlower() {
+    const f = document.createElement('div');
+    f.className = 'flower-particle';
+    f.innerText = flowers[Math.floor(Math.random() * flowers.length)];
+    f.style.left = Math.random() * 100 + 'vw';
+    f.style.fontSize = Math.random() * 15 + 10 + 'px';
+    f.style.animationDuration = Math.random() * 5 + 5 + 's';
+    f.style.opacity = Math.random();
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 10000);
   }
-
-  // יצירת פרחים כל X זמן
-  setInterval(createFallingFlower, 700); // כל 0.7 שניות
+  setInterval(createFlower, 800);
 </script>
 
 </body>
