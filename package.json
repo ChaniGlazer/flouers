@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-   "cloudinary": "^2.18.0",
+   "cloudinary": "^2.9.0",
    "node-fetch": "^3.3.2",
     "axios": "^1.13.2",
     "body-parser": "^2.2.2",
