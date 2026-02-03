@@ -178,7 +178,6 @@
   </div>
 
 <script>
-  /* לוגיקה מקורית - ללא שינוי */
   const raw = sessionStorage.getItem('flowerResult');
 
   if (!raw) {
@@ -189,16 +188,12 @@
     const img = document.getElementById('image');
     img.src = data.image || '';
     
-    // הגדרת כפתור ההורדה
     const downloadBtn = document.getElementById('downloadBtn');
     downloadBtn.onclick = () => downloadImage(data.image);
   }
 
-  function goBack() {
-    window.location.href = '/';
-  }
+  function goBack() { window.location.href = '/'; }
 
-  /* פונקציות חגיגה והורדה */
   function sendToFlorist() {
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     alert('ההזמנה נשלחה בהצלחה!');
@@ -218,12 +213,10 @@
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
-      // אם יש שגיאת אבטחה (CORS), פשוט נפתח את התמונה בטאב חדש
       window.open(imageSrc, '_blank');
     }
   }
 
-  /* אפקט פרחים עדין */
   const flowers = ['🌸', '🌷', '🌼', '🌺'];
   function createFlower() {
     const f = document.createElement('div');
