@@ -1,1 +1,76 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>הזר שלך 🌸</title>
+  <style>
+    body {
+      font-family: Assistant, sans-serif;
+      background: #fdfcfb;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 300px;
+    }
+    img {
+      width: 100%;
+      border-radius: 15px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      background: #ff6b81;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>הוראות והרכב הזר</h2>
+    <div id="instructions"></div>
+    <button onclick="goBack()">חזרה</button>
+  </div>
+
+  <div class="card">
+    <img id="image" alt="זר פרחים">
+  </div>
+</div>
+
+<script>
+  const raw = sessionStorage.getItem('flowerResult');
+
+  if (!raw) {
+    document.body.innerHTML = '<h2>לא נמצאו נתונים. חזרי לעמוד הראשי.</h2>';
+  } else {
+    const data = JSON.parse(raw);
+    document.getElementById('instructions').innerHTML = data.html;
+    document.getElementById('image').src = data.image || '';
+  }
+
+  function goBack() {
+    window.location.href = '/';
+  }
+</script>
+
+</body>
+</html>
 
