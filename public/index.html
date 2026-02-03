@@ -26,7 +26,6 @@
       position: relative;
     }
 
-    /* אפקט פרחים נופלים ברקע */
     .flower-particle {
       position: absolute;
       top: -50px;
@@ -110,7 +109,6 @@
   </div>
 
   <script>
-    // יצירת פרחים נופלים
     const flowerEmojis = ['🌸', '🌼', '🌷', '🌹', '🌻', '🌺'];
     function createFlower() {
       const flower = document.createElement('div');
@@ -143,8 +141,6 @@
         });
 
         const data = await res.json();
-
-        // שמירה ב-sessionStorage והעברה לדף התוצאה
         sessionStorage.setItem('flowerResult', JSON.stringify(data));
         window.location.href = '/result.html';
 
