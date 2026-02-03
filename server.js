@@ -31,19 +31,28 @@ async function saveImage(buffer, fileName) {
 }
 
 async function uploadToCloudinary(buffer, fileName) {
-    return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-            { folder: "bouquets", public_id: fileName.replace(/\.[^/.]+$/, "") },
-            (error, result) => {
-                if (error) {
-                    console.error("[LOG] Cloudinary upload error:", error);
-                    return reject(error);
-                }
-                console.log("[LOG] Image uploaded to Cloudinary:", result.secure_url);
-                resolve(result.secure_url);
-            }
-        ).end(buffer);
-    });
+    // יוצרים תיקייה זמנית אם לא קיימת
+    const tempDir = path.join(__dirname, "temp");
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+    const tempPath = path.join(tempDir, fileName);
+    await fs.promises.writeFile(tempPath, buffer);
+    console.log(`[LOG] Saved temp image: ${tempPath}`);
+
+    try {
+        const result = await cloudinary.uploader.upload(tempPath, {
+            folder: "bouquets",
+            public_id: fileName.replace(/\.[^/.]+$/, ""),
+            resource_type: "image",
+            format: path.extname(fileName).replace(".", ""), // שומר את הפורמט המקורי
+            overwrite: true
+        });
+        console.log("[LOG] Uploaded to Cloudinary:", result.secure_url);
+        return result.secure_url;
+    } finally {
+        // מוחקים את הקובץ הזמני
+        fs.unlinkSync(tempPath);
+    }
 }
 
 async function getFlowerData(description) {
