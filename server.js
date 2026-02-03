@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-//const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 const { OpenAI } = require('openai');
 const cloudinary = require('cloudinary').v2;
 
@@ -20,30 +20,32 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* פונקציה לשמירת התמונה בשרת (למקרה שתרצה לשמור ל־public, אבל לא חובה) */
 async function saveImage(buffer, fileName) {
     const imagesDir = path.join(__dirname, 'public', 'images');
     if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 
     const filePath = path.join(imagesDir, fileName);
     await fs.promises.writeFile(filePath, buffer);
+    console.log(`[LOG] Image saved locally: ${filePath}`);
     return `/images/${fileName}`;
 }
 
-/* פונקציה ל־Cloudinary */
 async function uploadToCloudinary(buffer, fileName) {
     return new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(
             { folder: "bouquets", public_id: fileName.replace(/\.[^/.]+$/, "") },
             (error, result) => {
-                if (error) return reject(error);
+                if (error) {
+                    console.error("[LOG] Cloudinary upload error:", error);
+                    return reject(error);
+                }
+                console.log("[LOG] Image uploaded to Cloudinary:", result.secure_url);
                 resolve(result.secure_url);
             }
         ).end(buffer);
     });
 }
 
-/* פונקציה ליצירת נתוני הזר */
 async function getFlowerData(description) {
     const systemMessage = `
 אתה מומחה פלוריסטיקה.
@@ -54,6 +56,8 @@ async function getFlowerData(description) {
   "image_prompt": ""
 }
 `;
+    console.log("[LOG] Sending to OpenAI model:\n", description);
+
     const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -63,13 +67,16 @@ async function getFlowerData(description) {
     });
 
     const text = response.choices[0].message.content;
+    console.log("[LOG] Response from OpenAI model:\n", text);
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("לא נמצא JSON תקין");
     return JSON.parse(jsonMatch[0]);
 }
 
-/* פונקציה ליצירת התמונה והעלאה ל־Cloudinary */
 async function generateImageHuggingFace(prompt) {
+    console.log("[LOG] Sending image prompt to HuggingFace:", prompt);
+
     const modelUrl = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0";
     const response = await fetch(modelUrl, {
         method: 'POST',
@@ -80,19 +87,22 @@ async function generateImageHuggingFace(prompt) {
         body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true } })
     });
 
-    if (!response.ok) throw new Error(`HuggingFace error: ${response.status}`);
+    if (!response.ok) {
+        console.error("[LOG] HuggingFace API error:", response.status);
+        throw new Error(`HuggingFace error: ${response.status}`);
+    }
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const fileName = `bouquet_${Date.now()}.png`;
 
-    // מעלים ל‑Cloudinary
     const cloudUrl = await uploadToCloudinary(buffer, fileName);
-    return cloudUrl; // מחזיר URL ל־Frontend
+    return cloudUrl;
 }
 
-/* ניהול בקשות יצירת זר */
 app.post('/generate', async (req, res) => {
+    console.log("[LOG] Received /generate request:", req.body);
+
     try {
         const jsonOutput = await getFlowerData(req.body.description);
 
@@ -101,11 +111,10 @@ app.post('/generate', async (req, res) => {
             try {
                 imageUrl = await generateImageHuggingFace(jsonOutput.image_prompt);
             } catch (err) {
-                console.log("ממשיכים ללא תמונה עקב שגיאה:", err.message);
+                console.error("[LOG] Continuing without image due to error:", err.message);
             }
         }
 
-        // בניית HTML להצגה
         let htmlOutput = '<h3>רשימת פרחים:</h3><ul>';
         Object.entries(jsonOutput.shopping_list?.פרחים || {}).forEach(([name, qty]) => {
             htmlOutput += `<li>${name}: ${qty}</li>`;
@@ -118,9 +127,12 @@ app.post('/generate', async (req, res) => {
         (jsonOutput.arrangement_instructions || []).forEach(step => htmlOutput += `<li>${step}</li>`);
         htmlOutput += '</ol>';
 
+        console.log("[LOG] Sending response to frontend");
+
         res.json({ html: htmlOutput, image: imageUrl });
 
     } catch (err) {
+        console.error("[LOG] Error in /generate:", err);
         res.status(500).json({ html: `<p>שגיאה בעיבוד הבקשה: ${err.message}</p>`, image: '' });
     }
 });
