@@ -3,274 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>הזר המעוצב שלך 🌸</title>
+  <title>זר פרחים AI - חוויה מלאה</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: #ff4757;
-      --accent-hover: #ff6b81;
-      --glass-white: rgba(255, 255, 255, 0.92);
-      --soft-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      --primary-color: #ff4757;
+      --secondary-color: #ff6b81;
+      --bg-gradient: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+      --glass-bg: rgba(255, 255, 255, 0.9);
     }
 
     body {
-      font-family: 'Assistant', sans-serif;
-      background: radial-gradient(circle at top right, #fff5f5, #fdfcfb, #e2d1c3);
+      font-family: 'Assistant', 'Segoe UI', sans-serif;
+      background: var(--bg-gradient);
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
-
-    /* אנימציית רקע עדינה */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: url('https://www.transparenttextures.com/patterns/cubes.png');
-      opacity: 0.05;
-      z-index: -1;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: row;
-      gap: 40px;
-      width: 100%;
-      max-width: 1250px;
-      z-index: 2;
-    }
-
-    /* עיצוב כרטיסים */
-    .card {
-      background: var(--glass-white);
-      backdrop-filter: blur(20px);
-      border-radius: 40px;
-      padding: 45px;
-      box-shadow: var(--soft-shadow);
-      border: 1px solid rgba(255,255,255,0.7);
-      transition: all 0.4s ease;
-    }
-
-    /* כרטיס טקסט - ימין */
-    .info-card {
-      flex: 1.3;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      animation: slideInRight 0.8s ease-out;
-    }
-
-    /* כרטיס תמונה - שמאל */
-    .image-card {
-      flex: 1;
-      padding: 10px;
-      position: relative;
-      animation: slideInLeft 0.8s ease-out;
-      border: 2px solid transparent;
-      background: linear-gradient(white, white) padding-box,
-                  linear-gradient(135deg, #ff4757, #ff9f43) border-box;
-    }
-
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
-
-    h2 {
-      color: var(--accent);
-      font-size: 2.8rem;
-      font-weight: 800;
-      margin: 0 0 20px 0;
-      letter-spacing: -1px;
-    }
-
-    #instructions {
-      font-size: 1.2rem;
-      line-height: 1.9;
-      color: #3d4451;
-      height: 350px;
-      overflow-y: auto;
-      padding-left: 15px;
-      border-right: 4px solid var(--soft-pink);
-    }
-
-    /* עיצוב התמונה */
-    .image-wrapper {
-      width: 100%;
-      height: 100%;
-      border-radius: 32px;
+      color: #2f3542;
       overflow: hidden;
       position: relative;
     }
 
-    #image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
-    }
-
-    .image-card:hover #image { transform: scale(1.08); }
-
-    /* כפתורים */
-    .btn-group {
-      display: flex;
-      gap: 15px;
-      margin-top: 30px;
-    }
-
-    button {
-      border: none;
-      border-radius: 25px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .btn-main {
-      background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
-      color: white;
-      padding: 20px 40px;
-      font-size: 1.3rem;
-      flex: 2;
-      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.35);
-    }
-
-    .btn-back {
-      background: #f1f2f6;
-      color: #57606f;
-      padding: 20px;
-      flex: 0.8;
-    }
-
-    .btn-download {
+    /* אפקט פרחים נופלים ברקע */
+    .flower-particle {
       position: absolute;
-      top: 25px;
-      left: 25px;
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--accent);
-      width: 55px;
-      height: 55px;
-      border-radius: 50%;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      font-size: 1.5rem;
+      top: -50px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      animation: fallAnimation linear forwards;
     }
 
-    button:hover { transform: translateY(-5px); filter: contrast(1.1); }
-    button:active { transform: scale(0.95); }
-
-    /* התאמה לנייד */
-    @media (max-width: 950px) {
-      .container { flex-direction: column; }
-      .image-card { order: -1; height: 400px; }
-      h2 { font-size: 2rem; }
+    @keyframes fallAnimation {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
+
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 35px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      z-index: 10;
+      border: 1px solid rgba(255,255,255,0.5);
+      animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 { color: var(--primary-color); font-size: 2.6rem; margin-bottom: 10px; font-weight: 900; }
+    .subtitle { font-size: 1.1rem; color: #57606f; margin-bottom: 30px; }
+
+    input[type="text"] {
+      padding: 18px 25px;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      transition: 0.3s;
+    }
+    
+    input[type="text"]:focus { outline: none; border-color: var(--secondary-color); }
+
+    .main-btn {
+      padding: 18px;
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3);
+      transition: 0.3s;
+    }
+
+    .main-btn:hover { transform: translateY(-3px); }
+
+    .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 8px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <div class="card info-card">
-    <div>
-      <h2>היצירה שלך מוכנה! ✨</h2>
-      <div id="instructions">
-        </div>
-    </div>
-    
-    <div class="btn-group">
-      <button class="btn-main" onclick="sendToFlorist()">
-        <span>שילחו לשוזרת</span> 💐
-      </button>
-      <button class="btn-back" onclick="goBack()">עיצוב נוסף</button>
-    </div>
+  <div class="container" id="inputView">
+    <h1>💐 זר פרחים AI</h1>
+    <p class="subtitle">הקישו תיאור וקבלו עיצוב מהחלומות</p>
+    <form id="flowerForm">
+      <input type="text" id="description" placeholder="למשל: זר סגול עם עלי אקליפטוס..." required>
+      <button type="submit" class="main-btn" id="submitBtn">צרו זר עכשיו</button>
+    </form>
   </div>
 
-  <div class="card image-card">
-    <div class="image-wrapper">
-      <img id="image" src="" alt="זר פרחים מעוצב">
-    </div>
-    <button class="btn-download" onclick="downloadImage()" title="שמור תמונה">
-      💾
-    </button>
-  </div>
-
-</div>
-
-<script>
-  // טעינת הנתונים מהדף הקודם
-  const raw = sessionStorage.getItem('flowerResult');
-
-  if (!raw) {
-    document.querySelector('.container').innerHTML = `
-      <div class="card" style="text-align:center; width:100%">
-        <h2>אופס... הנתונים הלכו לאיבוד 🌸</h2>
-        <button class="btn-main" onclick="goBack()">חזרו לעצב זר חדש</button>
-      </div>`;
-  } else {
-    const data = JSON.parse(raw);
-    document.getElementById('instructions').innerHTML = data.html;
-    document.getElementById('image').src = data.image || '';
-  }
-
-  function goBack() {
-    window.location.href = '/';
-  }
-
-  function sendToFlorist() {
-    // קונפטי חגיגי
-    const duration = 3 * 1000;
-    const end = Date.now() + duration;
-
-    (function frame() {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#ff4757', '#ffb8b8']
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#ff4757', '#ffb8b8']
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
-
-    // סימולציה של שליחה
-    setTimeout(() => {
-      alert('ההזמנה והוראות השזירה נשלחו לשוזרת בהצלחה! ✨');
-    }, 500);
-  }
-
-  async function downloadImage() {
-    const imgUrl = document.getElementById('image').src;
-    try {
-      const response = await fetch(imgUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'my-dream-bouquet.png';
-      a.click();
-    } catch (e) {
-      window.open(imgUrl, '_blank');
+  <script>
+    // יצירת פרחים נופלים
+    const flowerEmojis = ['🌸', '🌼', '🌷', '🌹', '🌻', '🌺'];
+    function createFlower() {
+      const flower = document.createElement('div');
+      flower.className = 'flower-particle';
+      flower.innerText = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+      flower.style.left = Math.random() * 100 + 'vw';
+      flower.style.fontSize = (Math.random() * 20 + 15) + 'px';
+      const duration = Math.random() * 5 + 5;
+      flower.style.animationDuration = duration + 's';
+      document.body.appendChild(flower);
+      setTimeout(() => flower.remove(), duration * 1000);
     }
-  }
-</script>
+    setInterval(createFlower, 700);
 
+    const form = document.getElementById('flowerForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader"></div> שוזרים...';
+      
+      const desc = document.getElementById('description').value;
+
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `description=${encodeURIComponent(desc)}`
+        });
+
+        const data = await res.json();
+
+        // שמירה ב-sessionStorage והעברה לדף התוצאה
+        sessionStorage.setItem('flowerResult', JSON.stringify(data));
+        window.location.href = '/result.html';
+
+      } catch (err) {
+        alert('שגיאה בחיבור לשרת.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'צרו זר עכשיו';
+      }
+    });
+  </script>
 </body>
 </html>
