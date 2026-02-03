@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
+//const fetch = require('node-fetch');
 const { OpenAI } = require('openai');
 const cloudinary = require('cloudinary').v2;
 
