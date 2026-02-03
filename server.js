@@ -3,8 +3,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch'); // אם צריך
+const fetch = require('node-fetch');
 const { OpenAI } = require('openai');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -12,14 +13,34 @@ app.use(express.static('public'));
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-/* פונקציה לשמירת התמונה בשרת */
+// הגדרת Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+/* פונקציה לשמירת התמונה בשרת (למקרה שתרצה לשמור ל־public, אבל לא חובה) */
 async function saveImage(buffer, fileName) {
     const imagesDir = path.join(__dirname, 'public', 'images');
     if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 
     const filePath = path.join(imagesDir, fileName);
     await fs.promises.writeFile(filePath, buffer);
-    return `/images/${fileName}`; // URL ל־frontend
+    return `/images/${fileName}`;
+}
+
+/* פונקציה ל־Cloudinary */
+async function uploadToCloudinary(buffer, fileName) {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+            { folder: "bouquets", public_id: fileName.replace(/\.[^/.]+$/, "") },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result.secure_url);
+            }
+        ).end(buffer);
+    });
 }
 
 /* פונקציה ליצירת נתוני הזר */
@@ -47,7 +68,7 @@ async function getFlowerData(description) {
     return JSON.parse(jsonMatch[0]);
 }
 
-/* פונקציה ליצירת התמונה */
+/* פונקציה ליצירת התמונה והעלאה ל־Cloudinary */
 async function generateImageHuggingFace(prompt) {
     const modelUrl = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0";
     const response = await fetch(modelUrl, {
@@ -64,7 +85,10 @@ async function generateImageHuggingFace(prompt) {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const fileName = `bouquet_${Date.now()}.png`;
-    return await saveImage(buffer, fileName); // מחזיר URL ל־frontend
+
+    // מעלים ל‑Cloudinary
+    const cloudUrl = await uploadToCloudinary(buffer, fileName);
+    return cloudUrl; // מחזיר URL ל־Frontend
 }
 
 /* ניהול בקשות יצירת זר */
@@ -77,7 +101,7 @@ app.post('/generate', async (req, res) => {
             try {
                 imageUrl = await generateImageHuggingFace(jsonOutput.image_prompt);
             } catch (err) {
-                console.log("ממשיכים ללא תמונה עקב שגיאה");
+                console.log("ממשיכים ללא תמונה עקב שגיאה:", err.message);
             }
         }
 
