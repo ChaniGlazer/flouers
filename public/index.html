@@ -256,11 +256,9 @@
         });
 
         const data = await res.json();
-        document.getElementById('instructionsContent').innerHTML = data.html || 'לא התקבלו הוראות.';
-        document.getElementById('flowerImage').src = data.image || '';
+       sessionStorage.setItem('flowerResult', JSON.stringify(data));
+window.location.href = '/result.html';
 
-        inputView.style.display = 'none';
-        resultView.style.display = 'flex';
       } catch (err) {
         alert('שגיאה בחיבור לשרת.');
       } finally {
